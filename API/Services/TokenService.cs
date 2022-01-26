@@ -1,5 +1,6 @@
 ﻿using API.Entitites;
 using API.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -11,32 +12,32 @@ namespace API.Services
 {
     public class TokenService : ITokenService
     {
-        
         private readonly SymmetricSecurityKey _key;
 
-        public TokenService(Icongiguration config)
+        public TokenService(IConfiguration config)
         {
-            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Tokenkey"]));
+            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Key"]));
+
         }
+
         public string CreateToken(User user)
         {
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.NameId,user.UserName)
+            { 
+                new Claim(JwtRegisteredClaimNames.NameId, user.UserName) 
             };
-
-            var cred = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
+            var credentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
+            var tokendescription = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(5),
-                SigningCredentials = cred
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials
             };
 
-            var tokenhanhandler = new JwtSecurityTokenHandler();
-            var token = tokenhanhandler.CreateToken(tokenDescriptor); 
-            return tokenhanhandler.WriteToken(token);
+            var TokenHandler = new JwtSecurityTokenHandler();
+            var token = TokenHandler.CreateToken(tokendescription);
+            return TokenHandler.WriteToken(token);
+
         }
     }
 }
